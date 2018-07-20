@@ -49,6 +49,10 @@ def settings_getter(module_name):
         If item is not found in the section, look for it in the 'default' section.
         If item is not found in the default section of settings.ini, return the
         default value
+
+        The value is converted to a bool, None, int, float if it should be.
+        If the value contains any of (, ; |), then the value returned will
+        be a list of items converted to (bool, None, int, float, or str).
         """
         val = getenv(name, getenv(name.upper()))
         if not val:
@@ -65,6 +69,9 @@ def settings_getter(module_name):
                 val = ih.from_string(val)
         else:
             val = ih.from_string(val)
+
+        if type(val) == str and (',' in val or ';' in val or '|' in val):
+            val = list(map(ih.from_string, ih.string_to_list(val)))
         return val
 
     return get_setting
