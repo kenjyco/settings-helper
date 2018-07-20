@@ -6,14 +6,14 @@ with open('README.rst', 'r') as fp:
 
 setup(
     name='settings-helper',
-    version='0.0.1',
+    version='0.0.2',
     description='Helpers to get specific settings from a particular section of a settings.ini file',
     long_description=long_description,
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
     url='https://github.com/kenjyco/settings-helper',
-    download_url='https://github.com/kenjyco/settings-helper/tarball/v0.0.1',
+    download_url='https://github.com/kenjyco/settings-helper/tarball/v0.0.2',
     packages=find_packages(),
     install_requires=[
         'input-helper',
