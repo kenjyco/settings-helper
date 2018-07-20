@@ -43,19 +43,24 @@ def settings_getter(module_name):
     config_object = _get_config_object(module_name)
 
     def get_setting(name, default='', section=APP_ENV, config_object=config_object):
-        """Get a setting from settings.ini for a particular section
+        """Get a setting from settings.ini for a particular section (or env var)
 
+        If an environment variable of the same name (or ALL CAPS) exists, return it.
         If item is not found in the section, look for it in the 'default' section.
         If item is not found in the default section of settings.ini, return the
         default value
         """
-        try:
-            val = config_object[section][name]
-        except KeyError:
+        val = getenv(name, getenv(name.upper()))
+        if not val:
             try:
-                val = config_object['default'][name]
+                val = config_object[section][name]
             except KeyError:
-                return default
+                try:
+                    val = config_object['default'][name]
+                except KeyError:
+                    return default
+                else:
+                    val = ih.from_string(val)
             else:
                 val = ih.from_string(val)
         else:
