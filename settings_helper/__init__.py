@@ -70,8 +70,10 @@ def settings_getter(module_name):
         else:
             val = ih.from_string(val)
 
-        if type(val) == str and (',' in val or ';' in val or '|' in val):
-            val = list(map(ih.from_string, ih.string_to_list(val)))
+        if type(val) == str:
+            val = val.replace('\\n', '\n').replace('\\t', '\t')
+            if (',' in val or ';' in val or '|' in val):
+                val = list(map(ih.from_string, ih.string_to_list(val)))
         return val
 
     return get_setting
