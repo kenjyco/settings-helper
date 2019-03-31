@@ -38,7 +38,7 @@ setup(
         'settings-helper',
         ...
     ],
-    include_package_date=True,
+    include_package_data=True,
     package_dir={'': '.'},
     package_data={
         '': ['*.ini'],

@@ -3,27 +3,27 @@ Setup in your package
 
 Create a default/sample ``settings.ini`` file in the module directory of
 your package, with a ``[default]`` section and any other ``[sections]``
-you want ( i.e. app environments)
+you want (i.e. app environments)
 
 ::
 
-    [default]
-    something = 100
+   [default]
+   something = 100
 
-    [dev]
-    redis_url = redis://localhost:6379/1
-    something = 500
+   [dev]
+   redis_url = redis://localhost:6379/1
+   something = 500
 
-    [test]
-    redis_url = redis://localhost:6379/9
-    things = none, true, false, 1, 2.5, dogs
+   [test]
+   redis_url = redis://localhost:6379/9
+   things = none, true, false, 1, 2.5, dogs
 
 Create a ``MANIFEST.in`` file in your package directory with the
 following
 
 ::
 
-    include settings.ini
+   include settings.ini
 
 Update the ``setup.py`` file of the package to include the
 ``setting.ini`` file and add ``settings-helper`` to ``install_requires``
@@ -31,39 +31,39 @@ list
 
 ::
 
-    from setuptools import setup, find_packages
+   from setuptools import setup, find_packages
 
-    setup(
-        name='package-name',
-        version='0.0.1',
-        ...
-        packages=find_packages(),
-        install_requires=[
-            'settings-helper',
-            ...
-        ],
-        include_package_date=True,
-        package_dir={'': '.'},
-        package_data={
-            '': ['*.ini'],
-        },
-        ...
-    )
+   setup(
+       name='package-name',
+       version='0.0.1',
+       ...
+       packages=find_packages(),
+       install_requires=[
+           'settings-helper',
+           ...
+       ],
+       include_package_data=True,
+       package_dir={'': '.'},
+       package_data={
+           '': ['*.ini'],
+       },
+       ...
+   )
 
 Note, your package directory tree will be something like the following
 
 ::
 
-    package-name
-    ├── .gitignore
-    ├── LICENSE.txt
-    ├── MANIFEST.in
-    ├── README.md
-    ├── README.rst
-    ├── package_name/
-    │   ├── __init__.py
-    │   └── settings.ini
-    └── setup.py
+   package-name
+   ├── .gitignore
+   ├── LICENSE.txt
+   ├── MANIFEST.in
+   ├── README.md
+   ├── README.rst
+   ├── package_name/
+   │   ├── __init__.py
+   │   └── settings.ini
+   └── setup.py
 
 Usage
 -----
@@ -72,11 +72,11 @@ Use in ``__init__.py`` of package
 
 ::
 
-    import settings_helper as sh
+   import settings_helper as sh
 
-    get_setting = sh.settings_getter(__name__)
-    something = get_setting('something')
-    something_else = get_setting('something_else', 'default_val')
+   get_setting = sh.settings_getter(__name__)
+   something = get_setting('something')
+   something_else = get_setting('something_else', 'default_val')
 
 Set ``APP_ENV`` environment variable to be one of your section names
 when starting your Python interpreter/server. ``APP_ENV`` defaults to
