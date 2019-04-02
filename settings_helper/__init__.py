@@ -1,5 +1,6 @@
 import configparser
 import os.path
+import re
 import input_helper as ih
 from os import getenv, makedirs
 from functools import partial
@@ -7,6 +8,7 @@ from shutil import copyfile
 
 
 APP_ENV = getenv('APP_ENV', 'dev')
+separator_rx = re.compile(r'.*[,;\|].*')
 
 
 def _get_settings_file(module_name):
@@ -77,3 +79,33 @@ def settings_getter(module_name, section=APP_ENV):
     """Return a 'get_setting' func to get a setting from settings.ini for a section"""
     config_object = _get_config_object(module_name)
     return partial(_get_setting, section=section, config_object=config_object)
+
+
+def get_all_settings(module_name):
+    """Return a dict containing all settings from settings.ini"""
+    config_object = _get_config_object(module_name)
+    sections = set(config_object.sections())
+    base = {}
+    results = {}
+    names = set()
+    if 'default' in sections:
+        base = dict(config_object['default'])
+        sections.discard('default')
+        names.update(list(base.keys()))
+    for section in sections:
+        results[section] = base.copy()
+        results[section].update(dict(config_object[section]))
+        names.update(list(results[section].keys()))
+    env = {name: getenv(name, getenv(name.upper())) for name in names}
+    for name, value in env.items():
+        for section in sections:
+            if name in results[section]:
+                if value is not None:
+                    results[section][name] = value
+                if separator_rx.match(results[section][name]):
+                    results[section][name] = ih.string_to_converted_list(
+                        results[section][name]
+                    )
+                else:
+                    results[section][name] = ih.from_string(results[section][name])
+    return results

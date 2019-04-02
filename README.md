@@ -98,3 +98,19 @@ The first time that `settings_getter` func in invoked, it looks for a
   module's install directory to that location
 - If the settings.ini file does not exist in the module's install directory, an
   exception is raised
+
+## Alternate Usage
+
+```
+import settings_helper as sh
+
+settings = sh.get_all_settings(__name__)
+```
+
+The `get_all_settings` func returns a dict containing all sections other than
+'default'.
+
+- If a setting is defined in 'default', but not in a particular section, the
+  setting in 'default' will appear under the section
+- If a setting (or upper-case equivalent) is defined as an environment variable,
+  that value will be used for all sections that use it
