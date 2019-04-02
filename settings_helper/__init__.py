@@ -2,6 +2,7 @@ import configparser
 import os.path
 import input_helper as ih
 from os import getenv, makedirs
+from functools import partial
 from shutil import copyfile
 
 
@@ -38,42 +39,41 @@ def _get_config_object(module_name):
     return config
 
 
-def settings_getter(module_name):
-    """Return a 'get_setting' func to get a setting from settings.ini for a section"""
-    config_object = _get_config_object(module_name)
+def _get_setting(name, default='', section=None, config_object=None):
+    """Get a setting from settings.ini for a particular section (or env var)
 
-    def get_setting(name, default='', section=APP_ENV, config_object=config_object):
-        """Get a setting from settings.ini for a particular section (or env var)
+    If an environment variable of the same name (or ALL CAPS) exists, return it.
+    If item is not found in the section, look for it in the 'default' section.
+    If item is not found in the default section of settings.ini, return the
+    default value
 
-        If an environment variable of the same name (or ALL CAPS) exists, return it.
-        If item is not found in the section, look for it in the 'default' section.
-        If item is not found in the default section of settings.ini, return the
-        default value
-
-        The value is converted to a bool, None, int, float if it should be.
-        If the value contains any of (, ; |), then the value returned will
-        be a list of items converted to (bool, None, int, float, or str).
-        """
-        val = getenv(name, getenv(name.upper()))
-        if not val:
+    The value is converted to a bool, None, int, float if it should be.
+    If the value contains any of (, ; |), then the value returned will
+    be a list of items converted to (bool, None, int, float, or str).
+    """
+    val = getenv(name, getenv(name.upper()))
+    if not val:
+        try:
+            val = config_object[section][name]
+        except KeyError:
             try:
-                val = config_object[section][name]
+                val = config_object['default'][name]
             except KeyError:
-                try:
-                    val = config_object['default'][name]
-                except KeyError:
-                    return default
-                else:
-                    val = ih.from_string(val)
+                return default
             else:
                 val = ih.from_string(val)
         else:
             val = ih.from_string(val)
+    else:
+        val = ih.from_string(val)
 
-        if type(val) == str:
-            val = val.replace('\\n', '\n').replace('\\t', '\t')
-            if (',' in val or ';' in val or '|' in val):
-                val = list(map(ih.from_string, ih.string_to_list(val)))
-        return val
+    if type(val) == str:
+        if (',' in val or ';' in val or '|' in val):
+            val = ih.string_to_converted_list(val)
+    return val
 
-    return get_setting
+
+def settings_getter(module_name, section=APP_ENV):
+    """Return a 'get_setting' func to get a setting from settings.ini for a section"""
+    config_object = _get_config_object(module_name)
+    return partial(_get_setting, section=section, config_object=config_object)
