@@ -15,6 +15,8 @@ setup(
     url='https://github.com/kenjyco/settings-helper',
     download_url='https://github.com/kenjyco/settings-helper/tarball/v0.0.3',
     packages=find_packages(),
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     install_requires=[
         'input-helper',
     ],
