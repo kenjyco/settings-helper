@@ -70,6 +70,7 @@ def _get_setting(name, default='', section=None, config_object=None):
         val = ih.from_string(val)
 
     if type(val) == str:
+        val = val.replace('\\n', '\n').replace('\\t', '\t')
         if (',' in val or ';' in val or '|' in val):
             val = ih.string_to_converted_list(val)
     return val
