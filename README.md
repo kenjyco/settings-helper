@@ -114,3 +114,14 @@ The `get_all_settings` func returns a dict containing all sections other than
   setting in 'default' will appear under the section
 - If a setting (or upper-case equivalent) is defined as an environment variable,
   that value will be used for all sections that use it
+
+## Tip
+
+- In your `<package-name>/tests/__init__.py` file, add the following so the
+  `test` section of settings is automatically used
+
+```
+import os
+
+os.environ['APP_ENV'] = 'test'
+```
