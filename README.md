@@ -117,8 +117,8 @@ The `get_all_settings` func returns a dict containing all sections other than
 
 ## Tip
 
-- In your `<package-name>/tests/__init__.py` file, add the following so the
-  `test` section of settings is automatically used
+In your `<package-name>/tests/__init__.py` file, add the following so the `test`
+section of settings is automatically used
 
 ```
 import os
