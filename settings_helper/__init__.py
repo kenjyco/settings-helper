@@ -12,26 +12,43 @@ separator_rx = re.compile(r'.*[,;\|].*')
 
 
 def _get_settings_file(module_name):
+    """Check ~/.config/<pkg>, /etc/<pkg>, /tmp/<pkg> dirs for settings.ini
+
+    If none found, copy the default settings.ini file from the package to the
+    first dir it is allowed to copy to and return the file path
+    """
     package_name = module_name.replace('_', '-')
     home_config_dir = os.path.expanduser('~/.config/{}'.format(package_name))
+    etc_config_dir = '/etc/{}'.format(package_name)
+    tmp_config_dir = '/tmp/{}'.format(package_name)
+    for dirpath in [home_config_dir, etc_config_dir, tmp_config_dir]:
+        settings_file = os.path.join(dirpath, 'settings.ini')
+        if os.path.isfile(settings_file):
+            return settings_file
+
+    # Copy default settings if necessary/able
     this_dir = os.path.abspath(os.path.dirname(__file__))
     install_dir = os.path.dirname(this_dir)
     module_install_dir = os.path.join(install_dir, module_name)
-    settings_file = os.path.join(home_config_dir, 'settings.ini')
-    if not os.path.isfile(settings_file):
-        default_settings = os.path.join(module_install_dir, 'settings.ini')
-        if not os.path.isfile(default_settings):
-            raise Exception('No default {} found... not able to create {}'.format(
-                repr(default_settings), repr(settings_file)
-            ))
+    default_settings = os.path.join(module_install_dir, 'settings.ini')
+    if not os.path.isfile(default_settings):
+        raise Exception('No default {} found.'.format(repr(default_settings)))
+
+    for dirpath in [home_config_dir, etc_config_dir, tmp_config_dir]:
         try:
-            makedirs(home_config_dir)
+            makedirs(dirpath)
         except FileExistsError:
             pass
-        print('copying {} -> {}'.format(repr(default_settings), repr(settings_file)))
-        copyfile(default_settings, settings_file)
-
-    return settings_file
+        except PermissionError:
+            continue
+        settings_file = os.path.join(dirpath, 'settings.ini')
+        try:
+            copyfile(default_settings, settings_file)
+        except PermissionError:
+            continue
+        else:
+            print('copied {} -> {}'.format(repr(default_settings), repr(settings_file)))
+            return settings_file
 
 
 def _get_config_object(module_name):
