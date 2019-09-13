@@ -39,12 +39,12 @@ def _get_settings_file(module_name):
             makedirs(dirpath)
         except FileExistsError:
             pass
-        except PermissionError:
+        except (PermissionError, OSError):
             continue
         settings_file = os.path.join(dirpath, 'settings.ini')
         try:
             copyfile(default_settings, settings_file)
-        except PermissionError:
+        except (PermissionError, OSError):
             continue
         else:
             print('copied {} -> {}'.format(repr(default_settings), repr(settings_file)))
