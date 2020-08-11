@@ -30,7 +30,18 @@ def _get_settings_file(module_name):
     this_dir = os.path.abspath(os.path.dirname(__file__))
     install_dir = os.path.dirname(this_dir)
     module_install_dir = os.path.join(install_dir, module_name)
-    default_settings = os.path.join(module_install_dir, 'settings.ini')
+    default_settings = ''
+    if os.path.isdir(module_install_dir):
+        default_settings = os.path.join(module_install_dir, 'settings.ini')
+    else:
+        # Possibly a `python3 setup.py develop` situation where a .egg-link file
+        # exists in the site-packages directory instead of the module directory
+        egg_link_file = os.path.join(install_dir, package_name + '.egg-link')
+        if os.path.isfile(egg_link_file):
+            with open(egg_link_file, 'r') as fp:
+                text = fp.readline()
+                linked_path = text.strip()
+            default_settings = os.path.join(linked_path, module_name, 'settings.ini')
     if not os.path.isfile(default_settings):
         raise Exception('No default {} found.'.format(repr(default_settings)))
 
