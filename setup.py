@@ -18,6 +18,7 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     install_requires=[
+        'bg-helper',
         'input-helper',
     ],
     include_package_data=True,

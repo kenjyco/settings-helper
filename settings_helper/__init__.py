@@ -1,6 +1,7 @@
 import configparser
 import os.path
 import re
+import bg_helper as bh
 import input_helper as ih
 from os import getenv, makedirs
 from functools import partial
@@ -79,6 +80,20 @@ def get_settings_file(module_name, copy_default_if_missing=True, exception=True)
             else:
                 print('copied {} -> {}'.format(repr(default_settings), repr(settings_file)))
                 return settings_file
+
+
+def sync_settings_file(module_name):
+    """Use vimdiff to compare default settings file with settings file in use
+
+    Return None if the files already have the same content
+    """
+    settings_file = get_settings_file(module_name)
+    default_settings_file = get_default_settings_file(module_name)
+    cmd = 'diff {} {}'.format(repr(settings_file), repr(default_settings_file))
+    output = bh.run_output(cmd)
+    if output:
+        cmd = 'vimdiff {} {}'.format(repr(settings_file), repr(default_settings_file))
+        bh.run(cmd)
 
 
 def _get_config_object(module_name):
