@@ -4,6 +4,7 @@ import re
 import input_helper as ih
 from os import getenv, makedirs
 from functools import partial
+from glob import glob
 from shutil import copyfile
 
 
@@ -11,11 +12,37 @@ APP_ENV = getenv('APP_ENV', 'dev')
 separator_rx = re.compile(r'.*[,;\|].*')
 
 
-def _get_settings_file(module_name):
-    """Check ~/.config/<pkg>, /etc/<pkg>, /tmp/<pkg> dirs for settings.ini
+def get_default_settings_file(module_name, exception=True):
+    """Return path to the default settings.ini file for a module
 
-    If none found, copy the default settings.ini file from the package to the
-    first dir it is allowed to copy to and return the file path
+    - exception: if True, raise an exception if settings.ini not found
+    """
+    this_dir = os.path.abspath(os.path.dirname(__file__))
+    install_dir = os.path.dirname(this_dir)
+    default_settings = ''
+    found = glob(
+        '{}/**/{}/settings.ini'.format(install_dir, module_name),
+        recursive=True
+    )
+    if found:
+        return found[0]
+    if exception:
+        raise Exception('No default settings.ini found in {} for module {}.'.format(
+            repr(install_dir), module_name
+        ))
+
+
+def get_settings_file(module_name, copy_default_if_missing=True, exception=True):
+    """Return path to the existing settings.ini file for a module
+
+    - copy_default_if_missing: if True copy the default settings.ini
+    - exception: if True, raise an exception if settings file is not found
+
+    Check ~/.config/<pkg>, /etc/<pkg>, /tmp/<pkg> dirs for settings.ini and
+    return the first one found
+
+    If copying the default settings.ini file, it will copy to the first of those
+    directories that is writeable
     """
     package_name = module_name.replace('_', '-')
     home_config_dir = os.path.expanduser('~/.config/{}'.format(package_name))
@@ -26,44 +53,36 @@ def _get_settings_file(module_name):
         if os.path.isfile(settings_file):
             return settings_file
 
-    # Copy default settings if necessary/able
-    this_dir = os.path.abspath(os.path.dirname(__file__))
-    install_dir = os.path.dirname(this_dir)
-    module_install_dir = os.path.join(install_dir, module_name)
-    default_settings = ''
-    if os.path.isdir(module_install_dir):
-        default_settings = os.path.join(module_install_dir, 'settings.ini')
-    else:
-        # Possibly a `python3 setup.py develop` situation where a .egg-link file
-        # exists in the site-packages directory instead of the module directory
-        egg_link_file = os.path.join(install_dir, package_name + '.egg-link')
-        if os.path.isfile(egg_link_file):
-            with open(egg_link_file, 'r') as fp:
-                text = fp.readline()
-                linked_path = text.strip()
-            default_settings = os.path.join(linked_path, module_name, 'settings.ini')
-    if not os.path.isfile(default_settings):
-        raise Exception('No default {} found.'.format(repr(default_settings)))
+    if not copy_default_if_missing:
+        if exception:
+            raise Exception('Could not find settings.ini in {}'.format(
+                ', '.join([home_config_dir, etc_config_dir, tmp_config_dir])
+            ))
 
-    for dirpath in [home_config_dir, etc_config_dir, tmp_config_dir]:
-        try:
-            makedirs(dirpath)
-        except FileExistsError:
-            pass
-        except (PermissionError, OSError):
-            continue
-        settings_file = os.path.join(dirpath, 'settings.ini')
-        try:
-            copyfile(default_settings, settings_file)
-        except (PermissionError, OSError):
-            continue
-        else:
-            print('copied {} -> {}'.format(repr(default_settings), repr(settings_file)))
-            return settings_file
+    if copy_default_if_missing:
+        default_settings = get_default_settings_file(module_name, exception=exception)
+        if not default_settings:
+            return
+
+        for dirpath in [home_config_dir, etc_config_dir, tmp_config_dir]:
+            try:
+                makedirs(dirpath)
+            except FileExistsError:
+                pass
+            except (PermissionError, OSError):
+                continue
+            settings_file = os.path.join(dirpath, 'settings.ini')
+            try:
+                copyfile(default_settings, settings_file)
+            except (PermissionError, OSError):
+                continue
+            else:
+                print('copied {} -> {}'.format(repr(default_settings), repr(settings_file)))
+                return settings_file
 
 
 def _get_config_object(module_name):
-    settings_file = _get_settings_file(module_name)
+    settings_file = get_settings_file(module_name)
     config = configparser.RawConfigParser()
     config.read(settings_file)
     return config
