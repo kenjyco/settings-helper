@@ -75,7 +75,7 @@ something_else = get_setting('something_else', 'default_val')
 ```
 
 Set `APP_ENV` environment variable to be one of your section names when starting
-your Python interpreter/server. `APP_ENV` defaults to `dev`if it is not set.
+your Python interpreter/server. **`APP_ENV` defaults to `dev` if it is not set.**
 
 - The `get_setting` func will return the value of the requested variable if it
   is set in the section specified in `APP_ENV`.
@@ -105,6 +105,14 @@ The first time that `settings_getter` func is invoked, it looks for a
 import settings_helper as sh
 
 settings = sh.get_all_settings(__name__)
+```
+
+or
+
+```
+import settings_helper as sh
+
+settings = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
 ```
 
 The `get_all_settings` func returns a dict containing all sections other than
