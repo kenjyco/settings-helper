@@ -91,8 +91,8 @@ your Python interpreter/server. `APP_ENV` defaults to `dev`if it is not set.
 - If the value contains any of (, ; |) then a list of converted values will be
   returned
 
-The first time that `settings_getter` func in invoked, it looks for a
-`settings.ini` file in `~/.config/package-name/settings.ini`.
+The first time that `settings_getter` func is invoked, it looks for a
+`settings.ini` file in `~/.config/<package-name>/settings.ini`.
 
 - If it does not find it, it will copy the default settings.ini from the
   module's install directory to that location
