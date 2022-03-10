@@ -19,15 +19,6 @@ fi
 [[ ! -d venv ]] && $PYTHON -m venv venv
 PYTHON=$(dirname $PIP)/python
 $PYTHON -m pip install --upgrade pip wheel
-$PIP install -r requirements.txt ${pip_args[@]}
-if [[ ! $(uname) =~ "MINGW" ]]; then
-    $PIP install ipython pytest pdbpp ${pip_args[@]}
-else
-    $PIP install ipython pytest ${pip_args[@]}
-fi
-$PYTHON setup.py develop
-
-if [[ ! -f "$HOME/.config/settings-helper/settings.ini" ]]; then
-    mkdir -pv "$HOME/.config/settings-helper"
-    cp -av settings_helper/settings.ini "$HOME/.config/settings-helper"
-fi
+extra_packages=(ipython pytest)
+[[ ! $(uname) =~ "MINGW" ]] && extra_packages+=(pdbpp)
+$PIP install ${extra_packages[@]} ${pip_args[@]} --editable .
