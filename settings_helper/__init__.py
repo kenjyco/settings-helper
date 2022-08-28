@@ -1,6 +1,7 @@
 import configparser
 import os.path
 import re
+import sys
 import bg_helper as bh
 import input_helper as ih
 from os import getenv, makedirs
@@ -21,17 +22,38 @@ def get_default_settings_file(module_name, exception=True):
     this_dir = os.path.abspath(os.path.dirname(__file__))
     install_dir = os.path.dirname(this_dir)
     found = glob(
-        '{}/**/{}/settings.ini'.format(install_dir, module_name),
+        os.path.join(install_dir, '**', module_name, 'settings.ini'),
         recursive=True
     )
     if found:
         return found[0]
 
-    # Possibly a `python3 setup.py develop` situation where a .egg-link file
-    # exists in the site-packages directory instead of the module directory
+    found = glob(
+        os.path.join(sys.prefix, '**', module_name, 'settings.ini'),
+        recursive=True
+    )
+    if found:
+        return found[0]
+
+    # Possibly a `python3 setup.py develop` situation, or a `pip install -e`
+    # situation where a .egg-link file exists in the site-packages directory
+    # instead of the module directory
     package_name = module_name.replace('_', '-')
-    egg_link_file = os.path.join(install_dir, package_name + '.egg-link')
-    if os.path.isfile(egg_link_file):
+    egg_link_file = None
+    found = glob(
+        os.path.join(install_dir, '**', package_name + '.egg-link'),
+        recursive=True
+    )
+    if found:
+        egg_link_file = found[0]
+    else:
+        found = glob(
+            os.path.join(sys.prefix, '**', package_name + '.egg-link'),
+            recursive=True
+        )
+        if found:
+            egg_link_file = found[0]
+    if egg_link_file:
         with open(egg_link_file, 'r') as fp:
             text = fp.readline()
             linked_path = text.strip()
