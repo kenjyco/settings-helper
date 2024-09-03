@@ -1,3 +1,60 @@
+You must include at least one section header in your settings.ini file
+(like ``[default]``). The configparser will raise a
+MissingSectionHeaderError if no headers are defined.
+
+If you have any additional section headers, each parsed section will
+only contain things defined in that section, plus anything defined in
+the special/optional ``[default]`` section.
+
+The values of any variable names in any sections can be overwritten by
+the value set for an environment variable of the same name (or it’s
+ALLCAPS name).
+
+Any variables that have multiple values separated by a comma will be
+converted to a list.
+
+The parsed values will be converted to their basic types (int, float,
+None, bool, str) via the ``from_string`` or ``string_to_converted_list``
+functions from `input-helper <https://pypi.org/project/input-helper>`__
+for easy use.
+
+You can comment out any variables in the settings.ini file with a
+leading ``#``.
+
+Setup for a one-off script
+--------------------------
+
+Create a ``settings.ini`` file next to your script with at least one
+section header in square brackets (like ``[my stuff]``).
+
+::
+
+   [my stuff]
+   something = 100
+   things = none, true, false, 1, 2.5, dogs and cats, grapes
+   # other = 500
+
+Use the simple ``get_all_settings`` function to get a dict of all
+settings by section header.
+
+::
+
+   import settings_helper as sh
+
+   settings = sh.get_all_settings()
+
+For our settings.ini file example, the settings dict from
+``get_all_settings()`` would be the following:
+
+::
+
+   {
+       'my stuff': {
+           'something': 100,
+           'things': [None, True, False, 1, 2.5, 'dogs and cats', 'grapes']
+       }
+   }
+
 Setup in your package
 ---------------------
 
@@ -17,6 +74,26 @@ you want (i.e. app environments)
    [test]
    redis_url = redis://localhost:6379/9
    things = none, true, false, 1, 2.5, dogs
+
+For this settings.ini file example, the settings dict from
+``get_all_settings()`` would be the following:
+
+::
+
+   {
+       'dev': {
+           'something': 500,
+           'redis_url': 'redis://localhost:6379/1'
+       },
+       'default': {
+           'something': 100
+       },
+       'test': {
+           'something': 100,
+           'redis_url': 'redis://localhost:6379/9',
+           'things': [None, True, False, 1, 2.5, 'dogs']
+       }
+   }
 
 Create a ``MANIFEST.in`` file in your package directory with the
 following
@@ -122,8 +199,8 @@ or
 
    settings = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
 
-The ``get_all_settings`` func returns a dict containing all sections
-other than ‘default’.
+The ``get_all_settings`` func returns a dict containing all section
+headers. ‘default’ .
 
 -  If a setting is defined in ‘default’, but not in a particular
    section, the setting in ‘default’ will appear under the section
