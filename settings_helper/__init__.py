@@ -68,9 +68,10 @@ def get_default_settings_file(module_name, exception=True):
         ))
 
 
-def get_settings_file(module_name, copy_default_if_missing=True, exception=True):
+def get_settings_file(module_name='', copy_default_if_missing=True, exception=True):
     """Return path to the existing settings.ini file for a module
 
+    - module_name: if empty, look for a settings.ini file in the current directory
     - copy_default_if_missing: if True copy the default settings.ini
     - exception: if True, raise an exception if settings file is not found
 
@@ -135,7 +136,7 @@ def sync_settings_file(module_name):
         bh.run(cmd)
 
 
-def _get_config_object(module_name):
+def _get_config_object(module_name=''):
     settings_file = get_settings_file(module_name)
     config = configparser.RawConfigParser()
     config.read(settings_file)
@@ -183,8 +184,8 @@ def settings_getter(module_name, section=APP_ENV):
     return partial(_get_setting, section=section, config_object=config_object)
 
 
-def get_all_settings(module_name):
-    """Return a dict containing all settings from settings.ini"""
+def get_all_settings(module_name=''):
+    """Return a dict containing all settings from settings.ini by section header"""
     config_object = _get_config_object(module_name)
     sections = set(config_object.sections())
     base = {}
