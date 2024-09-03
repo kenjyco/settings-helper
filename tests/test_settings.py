@@ -51,6 +51,5 @@ class TestGetting:
         assert settings['test']['things'] == [None, True, False, 1, 2.5, 'dogs']
         assert settings['test']['redis_url'] != settings['dev']['redis_url']
         assert settings['test']['redis_url'] == get_setting('redis_url')
-        assert 'default' not in settings
         assert 'something' in settings['dev']
         assert 'something' in settings['test']

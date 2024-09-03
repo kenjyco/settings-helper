@@ -4,7 +4,7 @@ import re
 import sys
 import bg_helper as bh
 import input_helper as ih
-from os import getenv, makedirs
+from os import getcwd, getenv, makedirs
 from functools import partial
 from glob import glob
 from shutil import copyfile
@@ -88,6 +88,10 @@ def get_settings_file(module_name, copy_default_if_missing=True, exception=True)
         settings_file = os.path.join(dirpath, 'settings.ini')
         if os.path.isfile(settings_file):
             return settings_file
+
+    settings_file = os.path.join(getcwd(), 'settings.ini')
+    if os.path.isfile(settings_file):
+        return settings_file
 
     if not copy_default_if_missing:
         if exception:
@@ -188,7 +192,6 @@ def get_all_settings(module_name):
     names = set()
     if 'default' in sections:
         base = dict(config_object['default'])
-        sections.discard('default')
         names.update(list(base.keys()))
     for section in sections:
         results[section] = base.copy()

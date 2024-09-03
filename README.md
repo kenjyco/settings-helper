@@ -115,8 +115,8 @@ import settings_helper as sh
 settings = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
 ```
 
-The `get_all_settings` func returns a dict containing all sections other than
-'default'.
+The `get_all_settings` func returns a dict containing all section headers.
+'default' .
 
 - If a setting is defined in 'default', but not in a particular section, the
   setting in 'default' will appear under the section
