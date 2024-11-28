@@ -143,7 +143,8 @@ def _get_config_object(module_name=''):
     return config
 
 
-def _get_setting(name, default='', section=None, config_object=None):
+def _get_setting(name, default='', section=None, config_object=None,
+                 keep_num_as_string=False):
     """Get a setting from settings.ini for a particular section (or env var)
 
     If an environment variable of the same name (or ALL CAPS) exists, return it.
@@ -165,27 +166,36 @@ def _get_setting(name, default='', section=None, config_object=None):
             except KeyError:
                 return default
             else:
-                val = ih.from_string(val)
+                val = ih.from_string(val, keep_num_as_string=keep_num_as_string)
         else:
-            val = ih.from_string(val)
+            val = ih.from_string(val, keep_num_as_string=keep_num_as_string)
     else:
-        val = ih.from_string(val)
+        val = ih.from_string(val, keep_num_as_string=keep_num_as_string)
 
     if type(val) == str:
         val = val.replace('\\n', '\n').replace('\\t', '\t')
         if (',' in val or ';' in val or '|' in val):
-            val = ih.string_to_converted_list(val)
+            val = ih.string_to_converted_list(val, keep_num_as_string=keep_num_as_string)
     return val
 
 
-def settings_getter(module_name, section=APP_ENV):
+def settings_getter(module_name, section=APP_ENV, keep_num_as_string=False):
     """Return a 'get_setting' func to get a setting from settings.ini for a section"""
     config_object = _get_config_object(module_name)
-    return partial(_get_setting, section=section, config_object=config_object)
+    return partial(
+        _get_setting,
+        section=section,
+        config_object=config_object,
+        keep_num_as_string=keep_num_as_string
+    )
 
 
-def get_all_settings(module_name=''):
-    """Return a dict containing all settings from settings.ini by section header"""
+def get_all_settings(module_name='', keep_num_as_string=False):
+    """Return a dict containing all settings from settings.ini by section header
+
+    - keep_num_as_string: if True, don't attempt to convert number strings to
+      int or float
+    """
     config_object = _get_config_object(module_name)
     sections = set(config_object.sections())
     base = {}
@@ -206,8 +216,12 @@ def get_all_settings(module_name=''):
                     results[section][name] = value
                 if separator_rx.match(results[section][name]):
                     results[section][name] = ih.string_to_converted_list(
-                        results[section][name]
+                        results[section][name],
+                        keep_num_as_string=keep_num_as_string
                     )
                 else:
-                    results[section][name] = ih.from_string(results[section][name])
+                    results[section][name] = ih.from_string(
+                        results[section][name],
+                        keep_num_as_string=keep_num_as_string
+                    )
     return results

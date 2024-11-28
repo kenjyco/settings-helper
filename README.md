@@ -51,6 +51,29 @@ would be the following:
 }
 ```
 
+When dealing with settings where values are numbers, but you don't want them
+converted (i.e. version numbers like "3.10"), you can set kwarg
+`keep_num_as_string` to `True` when calling `get_all_settings` (or
+`settings_getter`).
+
+```
+import settings_helper as sh
+
+settings = sh.get_all_settings(keep_num_as_string=True)
+```
+
+For our settings.ini file example, the settings dict from
+`get_all_settings(keep_num_as_string=True)` would be the following:
+
+```
+{
+    'my stuff': {
+        'something': '100',
+        'things': [None, True, False, '1', '2.5', 'dogs and cats', 'grapes']
+    }
+}
+```
+
 ## Setup in your package
 
 Create a default/sample `settings.ini` file in the module directory of your
