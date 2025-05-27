@@ -62,6 +62,29 @@ def get_default_settings_file(module_name, exception=True):
         if os.path.isfile(default_settings):
             return default_settings
 
+    # Possibly a `python3 setup.py develop` situation, or a `pip install -e`
+    # situation where a __editable__<pkg>.pth file exists instead of a
+    # .egg-link file (after the 64.0.0 release of setuptools)
+    #   - See: https://github.com/pypa/setuptools/compare/v63.4.3...v64.0.0
+    pth_file = None
+    found = glob(
+        os.path.join(bh.tools.PATH_TO_SITE_PACKAGES, '__editable__.' + module_name + '-*.pth')
+    )
+    if found:
+        pth_file = found[0]
+    else:
+        os.path.join(bh.tools.PATH_TO_SITE_PACKAGES, '__editable__.' + package_name + '-*.pth')
+        if found:
+            pth_file = found[0]
+    if pth_file:
+        with open(pth_file, 'r') as fp:
+            text = fp.readline()
+            linked_path = text.strip()
+        default_settings = os.path.join(linked_path, module_name, 'settings.ini')
+
+        if os.path.isfile(default_settings):
+            return default_settings
+
     if exception:
         raise Exception('No default settings.ini found in {} for module {}.'.format(
             repr(install_dir), module_name
