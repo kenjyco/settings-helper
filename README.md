@@ -14,6 +14,7 @@ something = 500
 [test]
 redis_url = redis://localhost:6379/9
 things = none, true, false, 1, 2.5, dogs
+something_else = 2.0
 ```
 
 Searches `~/.config/<package>/settings.ini`, `/etc/<package>/settings.ini`, `/tmp/<package>/settings.ini`, then `./settings.ini`. Copies default settings from package if missing. See [Setup in your package](https://github.com/kenjyco/settings-helper/blob/master/README.md#setup-in-your-package) below to define a default settings.ini file for your package.
@@ -37,7 +38,7 @@ settings = sh.get_all_settings(__name__)
 # {
 #     'default': {'something': 100},
 #     'dev': {'redis_url': 'redis://localhost:6379/1', 'something': 500},
-#     'test': {'redis_url': 'redis://localhost:6379/9', 'something': 100,
+#     'test': {'redis_url': 'redis://localhost:6379/9', 'something': 100, 'something_else': 2.0,
 #              'things': [None, True, False, 1, 2.5, 'dogs']}
 # }
 
@@ -121,6 +122,7 @@ something = 500
 [test]
 redis_url = redis://localhost:6379/9
 things = none, true, false, 1, 2.5, dogs
+something_else = 2.0
 ```
 
 For this settings.ini file example, the settings dict from `get_all_settings()` would be the following:
@@ -136,6 +138,7 @@ For this settings.ini file example, the settings dict from `get_all_settings()` 
     },
     'test': {
         'something': 100,
+        'something_else': 2.0,
         'redis_url': 'redis://localhost:6379/9',
         'things': [None, True, False, 1, 2.5, 'dogs']
     }
