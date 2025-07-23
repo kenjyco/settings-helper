@@ -1,25 +1,90 @@
+Environment-aware configuration management for Python packages using INI
+files with automatic type conversion to basic types (int, float, None,
+bool, str). Any variables with multiple comma-separated values will be
+converted to a list. Handles multi-environment setups (i.e. dev/testing)
+with automatic file discovery across standard configuration locations.
+**Environment variables override INI values** (i.e. prod) when they have
+the same name (or UPPERCASE name) as variables in the ``settings.ini``
+file. You can comment out any variables in the settings.ini file with a
+leading ``#``.
+
+Tested for Python 3.5 - 3.13.
+
+Example settings.ini
+--------------------
+
+.. code:: ini
+
+   [default]
+   something = 100
+   # other = 250
+
+   [dev]
+   redis_url = redis://localhost:6379/1
+   something = 500
+
+   [test]
+   redis_url = redis://localhost:6379/9
+   things = none, true, false, 1, 2.5, dogs
+   something_else = 2.0
+
+Searches ``~/.config/<package>/settings.ini``,
+``/etc/<package>/settings.ini``, ``/tmp/<package>/settings.ini``, then
+``./settings.ini``. Copies default settings from package if missing. See
+`Setup in your
+package <https://github.com/kenjyco/settings-helper/blob/master/README.md#setup-in-your-package>`__
+below to define a default settings.ini file for your package.
+
 You must include at least one section header in your settings.ini file
 (like ``[default]``). The configparser will raise a
-MissingSectionHeaderError if no headers are defined.
+MissingSectionHeaderError if no headers are defined. The only special
+header is **``[default]``**. If you have any additional section headers,
+each parsed section will only contain things defined in that section,
+plus anything defined in the ``[default]`` section.
 
-If you have any additional section headers, each parsed section will
-only contain things defined in that section, plus anything defined in
-the special/optional ``[default]`` section.
+Install
+-------
 
-The values of any variable names in any sections can be overwritten by
-the value set for an environment variable of the same name (or it’s
-ALLCAPS name).
+::
 
-Any variables that have multiple values separated by a comma will be
-converted to a list.
+   pip install settings-helper
 
-The parsed values will be converted to their basic types (int, float,
-None, bool, str) via the ``from_string`` or ``string_to_converted_list``
-functions from `input-helper <https://pypi.org/project/input-helper>`__
-for easy use.
+QuickStart
+----------
 
-You can comment out any variables in the settings.ini file with a
-leading ``#``.
+.. code:: python
+
+   import settings_helper as sh
+
+   # Get all settings by section
+   settings = sh.get_all_settings(__name__)
+   # Returns:
+   # {
+   #     'default': {'something': 100},
+   #     'dev': {'redis_url': 'redis://localhost:6379/1', 'something': 500},
+   #     'test': {'redis_url': 'redis://localhost:6379/9', 'something': 100, 'something_else': 2.0,
+   #              'things': [None, True, False, 1, 2.5, 'dogs']}
+   # }
+
+   # Get environment-specific settings (APP_ENV defaults to 'dev')
+   SETTINGS = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
+   redis_url = SETTINGS.get('redis_url')
+   something = SETTINGS.get('something', 100)
+
+   # Alternative: use settings getter factory
+   get_setting = sh.settings_getter(__name__)
+   redis_url = get_setting('redis_url')
+   something = get_setting('something', 100)
+
+   # All values are automatically converted: 'true' → True, '100' → 100, 'none' → None
+   # Lists are automatically parsed: 'a,b,c' → ['a', 'b', 'c']
+
+Note that when using the older ``settings_getter``, the **``APP_ENV``**
+environment variable is used to determine the section of the
+setttings.ini file to get the value from. This value defaults to ``dev``
+if not set. If the variable is not defined in the section, it will pull
+the value from the ``[default]`` section. If the variable is not defined
+in the default section, it will return the optional fallback value.
 
 Setup for a one-off script
 --------------------------
@@ -83,7 +148,7 @@ Setup in your package
 
 Create a default/sample ``settings.ini`` file in the module directory of
 your package, with a ``[default]`` section and any other ``[sections]``
-you want (i.e. app environments)
+you want (i.e. app environments)
 
 ::
 
@@ -97,6 +162,7 @@ you want (i.e. app environments)
    [test]
    redis_url = redis://localhost:6379/9
    things = none, true, false, 1, 2.5, dogs
+   something_else = 2.0
 
 For this settings.ini file example, the settings dict from
 ``get_all_settings()`` would be the following:
@@ -113,6 +179,7 @@ For this settings.ini file example, the settings dict from
        },
        'test': {
            'something': 100,
+           'something_else': 2.0,
            'redis_url': 'redis://localhost:6379/9',
            'things': [None, True, False, 1, 2.5, 'dogs']
        }
@@ -165,73 +232,8 @@ Note, your package directory tree will be something like the following
    │   └── settings.ini
    └── setup.py
 
-Usage
------
-
-Use in ``__init__.py`` of package
-
-::
-
-   import settings_helper as sh
-
-   get_setting = sh.settings_getter(__name__)
-   something = get_setting('something')
-   something_else = get_setting('something_else', 'default_val')
-
-Set ``APP_ENV`` environment variable to be one of your section names
-when starting your Python interpreter/server. **``APP_ENV`` defaults to
-``dev`` if it is not set.**
-
--  The ``get_setting`` func will return the value of the requested
-   variable if it is set in the section specified in ``APP_ENV``.
--  If the variable is not in the section, it will pull the value from
-   the ``[default]`` section
--  If the varialbe is not in the ``[default]`` section either, then
-   return the optional fallback value passed in the ``default`` keyword
-   argument to ``get_setting`` (which defaults to an empty string)
--  **If the requested variable exists in the environment (or its
-   uppercase equivalent), it will be used instead of getting from
-   settings.ini**
--  The value is automatically converted to a bool, None, int, or float
-   if it should be
--  If the value contains any of (, ; \|) then a list of converted values
-   will be returned
-
-The first time that ``settings_getter`` func is invoked, it looks for a
-``settings.ini`` file in ``~/.config/<package-name>/settings.ini``.
-
--  If it does not find it, it will copy the default settings.ini from
-   the module’s install directory to that location
--  If the settings.ini file does not exist in the module’s install
-   directory, an exception is raised
-
-Alternate Usage
----------------
-
-::
-
-   import settings_helper as sh
-
-   settings = sh.get_all_settings(__name__)
-
-or
-
-::
-
-   import settings_helper as sh
-
-   settings = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
-
-The ``get_all_settings`` func returns a dict containing all section
-headers. ‘default’ .
-
--  If a setting is defined in ‘default’, but not in a particular
-   section, the setting in ‘default’ will appear under the section
--  If a setting (or upper-case equivalent) is defined as an environment
-   variable, that value will be used for all sections that use it
-
 Tip
----
+~~~
 
 In your ``<package-name>/tests/__init__.py`` file, add the following so
 the ``test`` section of settings is automatically used
@@ -241,3 +243,58 @@ the ``test`` section of settings is automatically used
    import os
 
    os.environ['APP_ENV'] = 'test'
+
+API Overview
+------------
+
+Configuration Loading
+~~~~~~~~~~~~~~~~~~~~~
+
+-  **``get_all_settings(module_name='', keep_num_as_string=False)``** -
+   Return all settings by section
+
+   -  ``module_name``: Package name for settings discovery
+   -  ``keep_num_as_string``: Preserve numeric strings without
+      conversion
+   -  Returns: Dictionary with section names as keys
+   -  Internal calls: ``ih.from_string()``,
+      ``ih.string_to_converted_list()``
+
+-  **``settings_getter(module_name, section=APP_ENV, keep_num_as_string=False)``**
+   - Create setting getter function
+
+   -  ``module_name``: Package name for settings discovery
+   -  ``section``: Configuration section to use
+   -  ``keep_num_as_string``: Preserve numeric strings without
+      conversion
+   -  Returns: Function for retrieving individual settings
+   -  Internal calls: None
+
+File Management
+~~~~~~~~~~~~~~~
+
+-  **``get_settings_file(module_name='', copy_default_if_missing=True, exception=True)``**
+   - Locate settings file
+
+   -  ``module_name``: Package name for discovery (empty for current
+      directory)
+   -  ``copy_default_if_missing``: Copy default settings if missing
+   -  ``exception``: Raise exception if not found
+   -  Returns: Path to settings.ini file
+   -  Internal calls: ``get_default_settings_file()``
+
+-  **``get_default_settings_file(module_name, exception=True)``** - Find
+   package default settings
+
+   -  ``module_name``: Package name to search
+   -  ``exception``: Raise exception if not found
+   -  Returns: Path to default settings.ini in package
+   -  Internal calls: None
+
+-  **``sync_settings_file(module_name)``** - Compare settings with
+   vimdiff
+
+   -  ``module_name``: Package name
+   -  Returns: None (launches vimdiff if files differ)
+   -  Internal calls: ``get_settings_file()``,
+      ``get_default_settings_file()``, ``bh.run_output()``, ``bh.run()``
