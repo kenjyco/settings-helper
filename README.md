@@ -1,5 +1,7 @@
 Environment-aware configuration management for Python packages using INI files with automatic type conversion to basic types (int, float, None, bool, str). Any variables with multiple comma-separated values will be converted to a list. Handles multi-environment setups (i.e. dev/testing) with automatic file discovery across standard configuration locations. **Environment variables override INI values** (i.e. prod) when they have the same name (or UPPERCASE name) as variables in the `settings.ini` file. You can comment out any variables in the settings.ini file with a leading `#`.
 
+Tested for Python 3.5 - 3.13.
+
 ## Example settings.ini
 
 ```ini
