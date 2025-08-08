@@ -94,16 +94,20 @@ def get_default_settings_file(module_name, exception=True):
 def get_settings_file(module_name='', copy_default_if_missing=True, exception=True):
     """Return path to the existing settings.ini file for a module
 
-    - module_name: if empty, look for a settings.ini file in the current directory
+    - module_name: name of module containing a settings.ini file
     - copy_default_if_missing: if True copy the default settings.ini
     - exception: if True, raise an exception if settings file is not found
 
-    Check ~/.config/<pkg>, /etc/<pkg>, /tmp/<pkg> dirs for settings.ini and
+    Check ./, ~/.config/<pkg>/, /etc/<pkg>/, /tmp/<pkg>/ dirs for settings.ini and
     return the first one found
 
     If copying the default settings.ini file, it will copy to the first of those
     directories that is writeable
     """
+    settings_file = os.path.join(getcwd(), 'settings.ini')
+    if os.path.isfile(settings_file):
+        return settings_file
+
     package_name = module_name.replace('_', '-')
     home_config_dir = os.path.expanduser('~/.config/{}'.format(package_name))
     etc_config_dir = '/etc/{}'.format(package_name)
@@ -112,10 +116,6 @@ def get_settings_file(module_name='', copy_default_if_missing=True, exception=Tr
         settings_file = os.path.join(dirpath, 'settings.ini')
         if os.path.isfile(settings_file):
             return settings_file
-
-    settings_file = os.path.join(getcwd(), 'settings.ini')
-    if os.path.isfile(settings_file):
-        return settings_file
 
     if not copy_default_if_missing:
         if exception:
