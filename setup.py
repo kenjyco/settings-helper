@@ -9,14 +9,14 @@ with open('requirements.txt', 'r') as fp:
 
 setup(
     name='settings-helper',
-    version='0.0.17',
+    version='0.0.18',
     description='Helpers to get specific settings from a particular section of a settings.ini file',
     long_description=long_description,
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
     url='https://github.com/kenjyco/settings-helper',
-    download_url='https://github.com/kenjyco/settings-helper/tarball/v0.0.17',
+    download_url='https://github.com/kenjyco/settings-helper/tarball/v0.0.18',
     packages=find_packages(),
     # setup_requires=['pytest-runner'],
     # tests_require=['pytest'],
